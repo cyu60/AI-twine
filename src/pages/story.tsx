@@ -70,7 +70,6 @@ const dummyConversation: ChatCompletionRequestMessage[] = [
     content:
       "Sure! Can you please provide me with your current location and travel dates? I'll find the best flight options for you.",
   },
-  // ... continue with more conversation messages
 ];
 
 const initialQuestion: ChatCompletionRequestMessage = {
