@@ -6,6 +6,7 @@ import {
   OpenAIApi,
 } from "openai";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 if (!process.env.NEXT_PUBLIC_OPEN_AI_API_KEY) {
   throw new Error("Missing API key");
@@ -16,72 +17,29 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-// Dummy conversation for testing
-const dummyConversation: ChatCompletionRequestMessage[] = [
-  { role: "user", content: "Hi, I'm planning a trip to Europe." },
-  {
-    role: "assistant",
-    content:
-      "Great! I can help with that. Where in Europe are you planning to go?",
-  },
-  {
-    role: "user",
-    content: "I'm thinking of visiting Paris, Rome, and Barcelona.",
-  },
-  {
-    role: "assistant",
-    content: "Sounds like a fantastic trip! When are you planning to go?",
-  },
-  {
-    role: "user",
-    content: "I'm planning to go in the summer, around August.",
-  },
-  {
-    role: "assistant",
-    content:
-      "That's a popular time to visit Europe. How long will you be staying?",
-  },
-  {
-    role: "user",
-    content: "I'm planning to stay for three weeks.",
-  },
-  {
-    role: "assistant",
-    content:
-      "Three weeks should give you enough time to explore these cities thoroughly. Do you need help with booking flights or accommodations?",
-  },
-  {
-    role: "user",
-    content:
-      "Yes, I would appreciate some recommendations for affordable accommodations.",
-  },
-  {
-    role: "assistant",
-    content:
-      "Sure! For Paris, you can consider staying in budget hotels like Ibis or Holiday Inn Express. In Rome, budget options like Hotel Artemide or Hotel Quirinale are good choices. And in Barcelona, you can check out Hotel Acta Antibes or Hotel Ronda House. Would you like me to help with booking?",
-  },
-  {
-    role: "user",
-    content:
-      "Yes, please! Can you find me the best deals for flights from my location to these cities?",
-  },
-  {
-    role: "assistant",
-    content:
-      "Sure! Can you please provide me with your current location and travel dates? I'll find the best flight options for you.",
-  },
-];
+type StoryBlock = {
+  img?: string;
+} & ChatCompletionRequestMessage;
 
-const initialQuestion: ChatCompletionRequestMessage = {
+const systemPrompt: StoryBlock = {
+  role: "system",
+  content: `Create an infocom style text adventure
+  game I can play using this prompt box. Provide 3 options for me. Use the format:
+  **Option 1**
+  **Option 2**
+  **Option 3**
+  `,
+};
+const initialQuestion: StoryBlock = {
   role: "assistant",
-  content: "Hi, how can I help you today?",
+  content: "What is your story about?",
 };
 
 const Home: NextPage = () => {
   const [userInput, setUserInput] = useState("");
-  const [conversation, setConversation] = useState<
-    ChatCompletionRequestMessage[]
-  >([initialQuestion]);
+  const [conversation, setConversation] = useState<StoryBlock[]>([
+    initialQuestion,
+  ]);
 
   // useEffect(() => {
   //   console.log(userInput);
@@ -89,16 +47,16 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Chat with me App</title>
-        <meta name="description" content="Chat with me" />
+        <title>AI story journey App</title>
+        <meta name="description" content="AI story journey" />
         <link rel="icon" href="" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-800">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            Chat with me!
+            Create your AI story journey!
           </h1>
-          <div className="min-h-full w-full max-w-xl divide-y-4 divide-slate-800 bg-white">
+          <div className="min-h-full w-full max-w-4xl divide-y-4 divide-slate-800 bg-white">
             {/* {dummyConversation.map((c, i) => (
               <ConversationBox conversation={c} key={i} />
             ))} */}
@@ -119,12 +77,53 @@ const Home: NextPage = () => {
 };
 
 const ConversationBox: React.FC<{
-  conversation: ChatCompletionRequestMessage;
+  conversation: StoryBlock;
 }> = ({ conversation }) => {
   return (
-    <div className="flex gap-4 p-3">
+    <div className=" gap-4 p-3">
+      {conversation.img && (
+        <div className="flex max-w-xl items-center ">
+          <div
+            className="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100"
+            // href={"trips/" + String(Number(trip.id) - 1)}
+          >
+            <img
+              src={conversation.img}
+              // src={
+              //   "https://media.discordapp.net/attachments/1065979213099843777/1089979861516439722/820d95b0-2744-41ad-a486-de155e48c93c.jpg?width=1138&height=1138"
+              // }
+              alt=""
+              className="pointer-events-none object-cover group-hover:opacity-75"
+            />
+          </div>
+        </div>
+      )}
+      <div className="p-5">
+        <ReactMarkdown>{conversation.content}</ReactMarkdown>
+      </div>
+      {/* <div className="flex space-x-3 overflow-scroll">
+        <button
+          type="button"
+          className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        >
+          https://media.discordapp.net/attachments/1065979213099843777/1089979861516439722/820d95b0-2744-41ad-a486-de155e48c93c.jpg?width=1138&height=1138{" "}
+        </button>
+        <button
+          type="button"
+          className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        >
+          Button text
+        </button>
+        <button
+          type="button"
+          className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        >
+          Button text
+        </button>
+      </div> */}
+
       {/* profile pic */}
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 p-6">
+      {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 p-6">
         <div>
           {conversation.role === "user" ? (
             <UserIcon></UserIcon>
@@ -136,7 +135,7 @@ const ConversationBox: React.FC<{
       <div className="">
         <p className="italic text-slate-600">{conversation.role}</p>
         <p>{conversation.content}</p>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -144,30 +143,46 @@ const ConversationBox: React.FC<{
 const UserInputBox: React.FC<{
   userInput: string;
   setUserInput: Dispatch<SetStateAction<string>>;
-  conversation: ChatCompletionRequestMessage[];
-  setConversation: Dispatch<SetStateAction<ChatCompletionRequestMessage[]>>;
+  conversation: StoryBlock[];
+  setConversation: Dispatch<SetStateAction<StoryBlock[]>>;
 }> = ({ userInput, setUserInput, conversation, setConversation }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = async (newUserInput: string = userInput) => {
     setIsLoading(true);
+
+    const conversationText: ChatCompletionRequestMessage[] = conversation.map(
+      (e) => ({ role: e.role, content: e.content })
+    );
+
     const assistantResponseObj = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
-      messages: [...conversation, { role: "user", content: userInput }],
+      messages: [
+        systemPrompt,
+        ...conversationText,
+        { role: "user", content: newUserInput },
+      ],
     });
 
     const assistantResponse =
       assistantResponseObj?.data?.choices[0]?.message?.content || "";
-    console.log(userInput, assistantResponse, [
+    console.log(newUserInput, assistantResponse, [
       ...conversation,
-      { role: "user", content: userInput },
+      { role: "user", content: newUserInput },
       { role: "assistant", content: assistantResponse },
     ]);
 
+    const response = await openai.createImage({
+      prompt: assistantResponse,
+      n: 1,
+      size: "1024x1024",
+    });
+    const image = response.data?.data[0]?.url;
+    console.log(image);
     setConversation([
       ...conversation,
-      { role: "user", content: userInput },
-      { role: "assistant", content: assistantResponse },
+      // { role: "user", content: newUserInput },
+      { role: "assistant", content: assistantResponse, img: image },
     ]);
     setUserInput("");
     setIsLoading(false);
@@ -176,24 +191,51 @@ const UserInputBox: React.FC<{
   return (
     <div className="flex items-center bg-slate-300">
       {/* User Input */}
-      <textarea
-        className="m-3 w-9/12 p-3"
-        onChange={(e) => setUserInput(e.target.value)}
-        value={userInput}
-        disabled={isLoading}
-      ></textarea>
-
-      <div className="m-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 p-6">
-        {isLoading ? (
-          <div>
-            <Spinner />
+      {conversation.length > 1 ? (
+        <>
+          {isLoading ? (
+            <div className="m-5">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="m-5 flex space-x-3 overflow-scroll">
+              {["1", "2", "3"].map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  onClick={() => {
+                    // setUserInput("1");
+                    void handleClick(e);
+                  }}
+                >
+                  Option {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <textarea
+            className="m-3 w-9/12 p-3"
+            onChange={(e) => setUserInput(e.target.value)}
+            value={userInput}
+            disabled={isLoading}
+          ></textarea>
+          <div className="m-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 p-6">
+            {isLoading ? (
+              <div>
+                <Spinner />
+              </div>
+            ) : (
+              <div onClick={() => void handleClick()}>
+                <NextIcon></NextIcon>
+              </div>
+            )}
           </div>
-        ) : (
-          <div onClick={() => void handleClick()}>
-            <NextIcon></NextIcon>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
